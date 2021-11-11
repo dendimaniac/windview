@@ -1,0 +1,14 @@
+{
+  "markers": [
+    {
+      "id": "cd076c6a-d11f-4aad-aee4-84ae3c536794",
+      "position": {
+        "lat": 62.94615093401318,
+        "lng": 23.04017850144707
+      },
+      "description": "Can you please deliver the cables to this position?",
+      "label": "Cable delivery",
+      "type": "Construction"
+    }
+  ]
+}
