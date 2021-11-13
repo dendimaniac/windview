@@ -2,10 +2,17 @@ import { Marker } from "@react-google-maps/api";
 import { useEffect, useState } from "react";
 import { v4 as uuid } from "uuid";
 import { MarkerInfo, MarkerPosition, MarkerType, UserType } from "../../types";
-import { getAllMarkerInfos, postNewMarkerInfo } from "../../services/markers";
+import {
+  deleteMarker,
+  getAllMarkerInfos,
+  postNewMarkerInfo,
+} from "../../services/markers";
 import MarkerCreator from "../MarkerCreator";
-import MarkerWithInfo from "../MarkerWithInfo";
+import ConstructionInfo from "../MarkerWithInfo/ConstructionInfo";
 import UserTypeSwitcher from "../UserTypeSwitcher";
+import DeliveryInfo from "../MarkerWithInfo/DeliveryInfo";
+import ManagementInfo from "../MarkerWithInfo/ManagementInfo";
+import MarkerWithInfo from "../MarkerWithInfo";
 
 export type NewMarkerInfo = {
   position: Partial<MarkerPosition>;
@@ -44,7 +51,11 @@ const Overlay = ({ map, panorama }: Props) => {
     setNewMarkerInfo({ ...newMarkerInfo, position: { lat, lng } });
   };
 
-  const handleCreateNewMarker = async () => {
+  const handleCreateNewMarker = async (
+    label: string,
+    description: string,
+    markerType: MarkerType
+  ) => {
     if (!newMarkerInfo.position.lat || !newMarkerInfo.position.lng) return;
 
     const newMarker: MarkerInfo = {
@@ -53,9 +64,11 @@ const Overlay = ({ map, panorama }: Props) => {
         lat: newMarkerInfo.position.lat,
         lng: newMarkerInfo.position.lng,
       },
-      description: "",
-      label: "New POI",
-      type: "Construction",
+      description,
+      label,
+      type: markerType,
+      confirmationProcess: "awaiting_confirmation_request",
+      photoPaths: [],
     };
     setMarkerList([...markerList, { ...newMarker }]);
     await postNewMarkerInfo(newMarker);
@@ -66,9 +79,21 @@ const Overlay = ({ map, panorama }: Props) => {
     });
   };
 
-  const handleMarkerUpdate = (markerIndex: number, markerInfo: MarkerInfo) => {
+  const handleUpdateMarker = (markerId: string, markerInfo: MarkerInfo) => {
     const markerListCopy = [...markerList];
-    markerListCopy[markerIndex] = markerInfo;
+    const targetMarkerIndex = markerListCopy.findIndex(
+      (marker) => marker.id === markerId
+    );
+    if (targetMarkerIndex < 0) return;
+
+    markerListCopy[targetMarkerIndex] = markerInfo;
+    setMarkerList(markerListCopy);
+  };
+
+  const handleDeleteMarker = async (markerId: string, markerIndex: number) => {
+    await deleteMarker(markerId);
+    const markerListCopy = [...markerList];
+    markerListCopy.splice(markerIndex, 1);
     setMarkerList(markerListCopy);
   };
 
@@ -100,9 +125,11 @@ const Overlay = ({ map, panorama }: Props) => {
           key={markerInfo.id}
           map={map}
           panorama={panorama}
-          markerIndex={index}
           markerInfo={markerInfo}
-          handleMarkerUpdate={handleMarkerUpdate}
+          markerIndex={index}
+          currentUserType={currentUserType}
+          handleUpdateMarker={handleUpdateMarker}
+          handleDeleteMarker={handleDeleteMarker}
         />
       ))}
       {newMarkerInfo.position.lat && newMarkerInfo.position.lng && (

@@ -16,3 +16,7 @@ export const updateMarker = async (
 ) => {
   await axios.put(`http://localhost:3001/markers/${markerId}`, markerInfo);
 };
+
+export const deleteMarker = async (markerId: string) => {
+  await axios.delete(`http://localhost:3001/markers/${markerId}`);
+};

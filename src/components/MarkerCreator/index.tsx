@@ -1,8 +1,17 @@
-import { Button, ClickAwayListener, Fab, TextField } from "@mui/material";
-import { Add } from "@mui/icons-material";
+import {
+  Button,
+  ClickAwayListener,
+  Fab,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  TextField,
+} from "@mui/material";
+import { Add, Close } from "@mui/icons-material";
 import React, { ChangeEvent, useState } from "react";
 import { Box, styled } from "@mui/system";
 import { NewMarkerInfo } from "../Overlay";
+import { MarkerType } from "../../types";
 
 const Container = styled("div")({
   position: "relative",
@@ -13,8 +22,13 @@ const CreatorModal = styled(Box)({
   left: 50,
   bottom: 50,
   backgroundColor: "white",
-  width: "500px",
-  height: "400px",
+  width: 500,
+  height: 400,
+  display: "flex",
+  gap: 8,
+  flexDirection: "column",
+  padding: 16,
+  boxSizing: "border-box",
 });
 
 const Wrapper = styled("div")({
@@ -24,11 +38,22 @@ const Wrapper = styled("div")({
   zIndex: 1,
 });
 
+const ContentContainer = styled("div")({
+  overflowY: "scroll",
+  display: "flex",
+  gap: 8,
+  flexDirection: "column",
+});
+
 type Props = {
   newMarkerInfo: NewMarkerInfo;
   setNewMarkerInfo: React.Dispatch<React.SetStateAction<NewMarkerInfo>>;
   setNewMarkerAtCurrentPosition: () => void;
-  handleCreateNewMarker: () => Promise<void>;
+  handleCreateNewMarker: (
+    label: string,
+    description: string,
+    markerType: MarkerType
+  ) => Promise<void>;
 };
 
 const MarkerCreator = ({
@@ -38,17 +63,23 @@ const MarkerCreator = ({
   handleCreateNewMarker,
 }: Props) => {
   const [isModalOpened, setIsModalOpened] = useState(false);
+  const [label, setMarkerLabel] = useState<string>(newMarkerInfo.label);
+  const [description, setMarkerDescription] = useState<string>(
+    newMarkerInfo.description
+  );
+  const [markerType, setMarkerType] = useState<MarkerType>("Construction");
 
   const handleFabClicked = () => {
-    setIsModalOpened(true);
-  };
+    if (isModalOpened) {
+      setIsModalOpened(false);
+      setNewMarkerInfo({
+        ...newMarkerInfo,
+        position: { lat: undefined, lng: undefined },
+      });
+      return;
+    }
 
-  const handleModelClosed = () => {
-    setNewMarkerInfo({
-      ...newMarkerInfo,
-      position: { lat: undefined, lng: undefined },
-    });
-    setIsModalOpened(false);
+    setIsModalOpened(true);
   };
 
   const handleLatInputChanged = (
@@ -73,20 +104,40 @@ const MarkerCreator = ({
     });
   };
 
+  const handleMarkerLabelChanged = (
+    e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
+  ) => {
+    setMarkerLabel(e.target.value);
+  };
+
+  const handleMarkerDescriptionChanged = (
+    e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
+  ) => {
+    setMarkerDescription(e.target.value);
+  };
+
+  const handleMarkerTypeChange = (event: SelectChangeEvent) => {
+    setMarkerType(event.target.value as MarkerType);
+  };
+
+  const handleCreateClicked = () => {
+    setMarkerLabel("");
+    setMarkerDescription("");
+    setMarkerType("Construction");
+    setIsModalOpened(false);
+    handleCreateNewMarker(label, description, markerType);
+  };
+
   return (
     <Wrapper>
       <Container>
-        <Fab
-          size="medium"
-          color="primary"
-          onClick={handleFabClicked}
-        >
-          <Add />
+        <Fab size="medium" color="primary" onClick={handleFabClicked}>
+          {isModalOpened ? <Close /> : <Add />}
         </Fab>
         {isModalOpened && (
-          <ClickAwayListener onClickAway={handleModelClosed}>
-            <CreatorModal>
-              <p>Creator</p>
+          <CreatorModal>
+            <p>Add new POI</p>
+            <ContentContainer>
               <TextField
                 variant="filled"
                 label="Latitude"
@@ -104,16 +155,32 @@ const MarkerCreator = ({
               <Button onClick={setNewMarkerAtCurrentPosition}>
                 Set marker at current position
               </Button>
-              <Button
-                onClick={() => {
-                  handleCreateNewMarker();
-                  setIsModalOpened(false);
-                }}
+              <TextField
+                value={label}
+                variant="standard"
+                onChange={handleMarkerLabelChanged}
+                fullWidth
+              />
+              <span>Description</span>
+              <TextField
+                value={description}
+                multiline
+                onChange={handleMarkerDescriptionChanged}
+                rows={5}
+                variant="filled"
+                fullWidth
+              />
+              <Select
+                value={markerType}
+                label="Marker type"
+                onChange={handleMarkerTypeChange}
               >
-                Add POI
-              </Button>
-            </CreatorModal>
-          </ClickAwayListener>
+                <MenuItem value={"Construction"}>Construction</MenuItem>
+                <MenuItem value={"Delivery"}>Delivery</MenuItem>
+              </Select>
+            </ContentContainer>
+            <Button onClick={handleCreateClicked}>Add</Button>
+          </CreatorModal>
         )}
       </Container>
     </Wrapper>

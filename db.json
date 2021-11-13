@@ -1,14 +1,21 @@
 {
   "markers": [
     {
-      "id": "cd076c6a-d11f-4aad-aee4-84ae3c536794",
+      "id": "43ec4d16-125f-44ce-8bfa-70a00d4d5912",
       "position": {
         "lat": 62.94615093401318,
         "lng": 23.04017850144707
       },
-      "description": "Can you please deliver the cables to this position?",
+      "description": "Can you please deliver the cables to this exact location by Friday?",
       "label": "Cable delivery",
-      "type": "Construction"
+      "type": "Delivery",
+      "confirmationProcess": "confirmed_request",
+      "photoPaths": [
+        {
+          "id": "4a658a01-e300-46c4-bfa5-756ffdc63520",
+          "name": "image.png"
+        }
+      ]
     }
   ]
 }
